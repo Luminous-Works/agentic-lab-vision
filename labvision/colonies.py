@@ -55,7 +55,8 @@ def _find_dish(gray):
     return w / 2.0, h / 2.0, m * 0.45
 
 
-def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True):
+def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
+            tmul=1.0, tmin=18, peak=0.45, bgdiv=6.0):
     h0, w0 = bgr.shape[:2]
     scale = TARGET / max(h0, w0)
     img = cv2.resize(bgr, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
@@ -68,20 +69,20 @@ def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True):
 
     # flatten illumination: heavy blur of the masked image is the background
     g = gray.astype(np.float32)
-    bg = cv2.GaussianBlur(g, (0, 0), max(r / 6.0, 15))
+    bg = cv2.GaussianBlur(g, (0, 0), max(r / bgdiv, 15))
     diff = np.abs(g - bg)
     diff[mask == 0] = 0
     diff8 = cv2.normalize(diff, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     inside = diff8[mask > 0]
     t, _ = cv2.threshold(inside.reshape(-1, 1), 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    binary = ((diff8 > max(t, 18)) & (mask > 0)).astype(np.uint8) * 255
+    binary = ((diff8 > max(t * tmul, tmin)) & (mask > 0)).astype(np.uint8) * 255
     k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
     binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, k)
     binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, k)
 
     # watershed split of touching colonies
     dist = cv2.distanceTransform(binary, cv2.DIST_L2, 5)
-    _, peaks = cv2.threshold(dist, 0.45 * dist.max() if dist.max() > 0 else 1, 255, cv2.THRESH_BINARY)
+    _, peaks = cv2.threshold(dist, peak * dist.max() if dist.max() > 0 else 1, 255, cv2.THRESH_BINARY)
     peaks = peaks.astype(np.uint8)
     n, markers = cv2.connectedComponents(peaks)
     markers = markers + 1
@@ -106,6 +107,60 @@ def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True):
                    sharpness=float(cv2.Laplacian(gray, cv2.CV_64F)[mask > 0].var()),
                    glare=float((inner > 250).mean()),
                    brightness=float(inner.mean()))
+    if draw:
+        ov = img.copy()
+        cv2.circle(ov, (int(cx), int(cy)), int(r * margin), (255, 200, 0), 2)
+        for c in colonies:
+            cv2.circle(ov, (int(c.x), int(c.y)), max(3, int((c.area / np.pi) ** 0.5) + 2), (0, 0, 255), 1)
+        out.overlay = ov
+    return out
+
+
+def analyse_blobs(bgr, margin=0.90, k=5.0, sigmas=(1.5, 2.5, 4.0, 6.0), draw=True,
+                  min_sep=5):
+    """Scale-space blob detector (difference of Gaussians), built for small pale colonies.
+
+    For each sigma, response = sigma^2 * |G(sigma) - G(1.6 sigma)| (scale-normalised).
+    A blob is a spatial local maximum that also beats the neighbouring scales and
+    exceeds median + k * 1.4826 * MAD of the response inside the dish mask
+    (robust to the colonies themselves). Counting maxima keeps touching colonies
+    separate without a watershed.
+    """
+    h0, w0 = bgr.shape[:2]
+    scale = TARGET / max(h0, w0)
+    img = cv2.resize(bgr, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype(np.float32)
+    cx, cy, r = _find_dish(gray.astype(np.uint8))
+    mask = np.zeros(gray.shape, np.uint8)
+    cv2.circle(mask, (int(cx), int(cy)), int(r * margin), 255, -1)
+    area_dish = float(cv2.countNonZero(mask))
+
+    stack = []
+    for s in sigmas:
+        d = cv2.GaussianBlur(gray, (0, 0), s) - cv2.GaussianBlur(gray, (0, 0), 1.6 * s)
+        stack.append((s * s) * np.abs(d))
+    stack = np.stack(stack)                      # (S, H, W)
+    best = stack.max(0)
+    inside = best[mask > 0]
+    med = float(np.median(inside))
+    mad = float(np.median(np.abs(inside - med))) * 1.4826 + 1e-6
+    thr = med + k * mad
+
+    # spatial NMS (window ~ min_sep) on the best-scale response
+    kern = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * min_sep + 1, 2 * min_sep + 1))
+    peaks = (best >= cv2.dilate(best, kern)) & (best > thr) & (mask > 0)
+    ys, xs = np.nonzero(peaks)
+    scale_idx = stack.argmax(0)
+    colonies = []
+    for y, x in zip(ys, xs):
+        s = sigmas[scale_idx[y, x]]
+        b, g, rr = (float(img[y, x, c]) for c in range(3))
+        colonies.append(Colony(float(x), float(y), float(np.pi * 2 * s * s), (b, g, rr)))
+    gi = gray.astype(np.uint8)[mask > 0]
+    out = Analysis(scale=scale, dish=(cx, cy, r), colonies=colonies,
+                   coverage=sum(c.area for c in colonies) / area_dish,
+                   sharpness=float(cv2.Laplacian(gray, cv2.CV_32F)[mask > 0].var()),
+                   glare=float((gi > 250).mean()), brightness=float(gi.mean()))
     if draw:
         ov = img.copy()
         cv2.circle(ov, (int(cx), int(cy)), int(r * margin), (255, 200, 0), 2)
