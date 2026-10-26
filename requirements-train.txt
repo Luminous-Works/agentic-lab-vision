@@ -1,0 +1,1 @@
+scikit-learn  # training machine only (scripts/train_forest.py); not shipped to Lambda

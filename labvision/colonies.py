@@ -125,7 +125,7 @@ def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
     out = Analysis(scale=scale, dish=(cx, cy, r), colonies=colonies,
                    coverage=sum(c.area for c in colonies) / area_dish,
                    sharpness=float(cv2.Laplacian(gray, cv2.CV_64F)[mask > 0].var()),
-                   glare=float((inner > 250).mean()),
+                   glare=float((inner > 245).mean()),
                    brightness=float(inner.mean()), dish_found=dish_found)
     if draw:
         ov = img.copy()
@@ -180,7 +180,7 @@ def analyse_blobs(bgr, margin=0.90, k=5.0, sigmas=(1.5, 2.5, 4.0, 6.0), draw=Tru
     out = Analysis(scale=scale, dish=(cx, cy, r), colonies=colonies,
                    coverage=sum(c.area for c in colonies) / area_dish,
                    sharpness=float(cv2.Laplacian(gray, cv2.CV_32F)[mask > 0].var()),
-                   glare=float((gi > 250).mean()), brightness=float(gi.mean()), dish_found=dish_found)
+                   glare=float((gi > 245).mean()), brightness=float(gi.mean()), dish_found=dish_found)
     if draw:
         ov = img.copy()
         cv2.circle(ov, (int(cx), int(cy)), int(r * margin), (255, 200, 0), 2)

@@ -13,7 +13,7 @@ button:disabled{opacity:.5}
 button.alt{background:#2a3140;color:var(--fg)}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 #v{font-size:26px;font-weight:800;padding:12px 16px;border-radius:12px;display:none}
-.ACCEPT{background:#0f3a2b;color:var(--ok)}
+.ESTIMATE{background:#0f3a2b;color:var(--ok)}
 .NEEDS_HUMAN{background:#3d3210;color:var(--warn)}
 .RETAKE{background:#401a1a;color:var(--bad)}
 img{max-width:100%;border-radius:10px}
@@ -23,7 +23,7 @@ code{color:var(--acc)}
 .m{color:var(--mut);font-size:17px}
 </style></head><body><main>
 <h1>Agentic Lab Vision</h1>
-<p class="s">Photo of a culture plate in. OpenCV 5 checks the photo, counts colonies, and decides: accept, ask a human to approve, or ask for a retake.</p>
+<p class="s">Photo of a culture plate in. OpenCV 5 checks the photo, counts colonies, and decides what happens next: repair the photo, ask for a retake, or hand you an estimate to approve.</p>
 <div class="card"><div class="row">
 <input id="f" type="file" accept="image/*" aria-label="Plate photo">
 <input id="k" type="password" placeholder="API key" aria-label="API key" size="18">
@@ -33,7 +33,7 @@ code{color:var(--acc)}
 <div id="v"></div><p id="rs"></p>
 <img id="ov" alt="Plate with detected colonies circled in red">
 <div class="row" id="hd" style="display:none;margin-top:12px">
-<button id="ap">Approve this count</button><button class="alt" id="rt">Request retake</button><span class="m" id="hm"></span></div>
+<button id="ap">Approve this estimate</button><button class="alt" id="rt">Request retake</button><span class="m" id="hm"></span></div>
 <h3>What the agent saw and did</h3><ol id="tr"></ol></div>
 <script>
 const $=i=>document.getElementById(i);let last=null;
@@ -47,9 +47,9 @@ $('go').onclick=async()=>{const f=$('f').files[0];if(!f){$('st').textContent='Pi
 $('go').disabled=true;$('st').textContent='Analysing...';
 try{const j=await call('/analyze',{image:await shrink(f)});last=j;
 $('out').style.display='block';const v=$('v');v.style.display='block';v.className=j.outcome;
-v.textContent=j.outcome==='ACCEPT'?('ACCEPTED: '+j.count+' colonies'):j.outcome==='RETAKE'?'RETAKE REQUESTED':('HUMAN REVIEW: '+(j.count==null?'no':j.count)+' colonies counted');
+v.textContent=j.outcome==='ESTIMATE'?('ESTIMATE: about '+j.count+' colonies'):j.outcome==='RETAKE'?'RETAKE REQUESTED':('HUMAN REVIEW: '+(j.count==null?'no':j.count)+' colonies counted');
 $('rs').textContent=j.reason+' ('+j.ms+' ms, OpenCV '+j.opencv+')';$('ov').src='data:image/jpeg;base64,'+j.overlay;
-$('hd').style.display=j.outcome==='NEEDS_HUMAN'?'flex':'none';$('hm').textContent='';
+$('hd').style.display=(j.outcome==='NEEDS_HUMAN'||j.outcome==='ESTIMATE')?'flex':'none';$('hm').textContent='';
 $('tr').innerHTML=j.trace.map(t=>'<li><b>Step '+t.step+'</b>: dish '+(t.observation.dish_found?'found':'NOT found')+', sharpness '+t.observation.sharpness+', brightness '+t.observation.brightness+', glare '+t.observation.glare+', coverage '+t.observation.coverage+', blobs '+t.observation.count+'<br><code>'+esc(t.decision)+'</code></li>').join('');
 $('st').textContent='Done.'}catch(e){$('st').textContent='Error: '+e.message}$('go').disabled=false};
 [['ap','approve'],['rt','retake']].forEach(p=>{$(p[0]).onclick=async()=>{try{const r=await call('/decision',{id:last.id,decision:p[1]});$('hm').textContent='Recorded: '+r.recorded}catch(e){$('hm').textContent=e.message}}});

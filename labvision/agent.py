@@ -7,7 +7,7 @@ photo with OpenCV 5, and what it sees decides the next tool call:
   too dark                           -> call enhance (gamma + CLAHE), perceive again
   glare                              -> call suppress_glare (inpaint), perceive again
   too crowded for a trustworthy count-> count, but ask a human to approve the number
-  otherwise                          -> count and accept
+  otherwise                          -> count, report it as an ESTIMATE for a human to approve
 
 Every step lands in `trace`, so the visual evidence behind each decision is
 inspectable. Thresholds are in THRESH and were set from the AGAR demo statistics
@@ -15,7 +15,9 @@ inspectable. Thresholds are in THRESH and were set from the AGAR demo statistics
 
 The agent is deliberately rule-based: no model is called, so it is deterministic,
 free to run, and its failure modes are the rules' failure modes (listed in the
-report). Human control: NEEDS_HUMAN outcomes carry a reason and never auto-accept.
+report). Human control: no count is ever auto-recorded. The counter's measured accuracy on the
+AGAR demo (see eval) is too low for that, so even a clean photo yields an ESTIMATE that
+a person approves; poor photos are repaired, sent back for a retake, or escalated.
 """
 from dataclasses import dataclass, field
 import json, os
@@ -28,8 +30,8 @@ PARAMS = json.load(open(_P)) if os.path.exists(_P) else {}
 
 THRESH = dict(
     sharp_min=25.0,      # variance of Laplacian (1000 px working size) below this = too blurry
-    bright_min=80.0,     # mean grey inside the dish below this = under-exposed
-    glare_max=0.02,      # fraction of dish pixels near saturation above this = glare
+    bright_min=100.0,     # mean grey inside the dish below this = under-exposed
+    glare_max=0.005,     # fraction of dish pixels near saturation above this = glare
     crowded_cov=0.25,    # fraction of dish area covered by blobs above this
     crowded_n=250,       # or more blobs than this: count unreliable, ask a human
     max_repairs=2,
@@ -70,7 +72,7 @@ def perceive(img):
 
 @dataclass
 class Result:
-    outcome: str                 # ACCEPT | NEEDS_HUMAN | RETAKE
+    outcome: str                 # ESTIMATE | NEEDS_HUMAN | RETAKE
     count: int | None
     reason: str
     trace: list = field(default_factory=list)
@@ -115,9 +117,9 @@ def review(img, notify=None, repairs=True):
             trace.append(entry)
             r = Result("NEEDS_HUMAN", obs["count"], "crowded plate: count likely unreliable", trace, alert=True)
             break
-        entry["decision"] = "quality adequate -> accept count"
+        entry["decision"] = "quality adequate -> report count as an ESTIMATE for human approval"
         trace.append(entry)
-        r = Result("ACCEPT", obs["count"], "quality checks passed", trace)
+        r = Result("ESTIMATE", obs["count"], "photo quality passed; the count is an estimate that needs human approval", trace)
         break
     else:  # repairs exhausted without a verdict
         r = Result("NEEDS_HUMAN", None, "could not repair photo within the step budget", trace, alert=True)
