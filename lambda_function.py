@@ -83,7 +83,7 @@ def handler(event, context):
         out["id"] = str(uuid.uuid4())
         out["ms"] = int((time.time() - t0) * 1000)
         out["opencv"] = cv2.__version__
-        a = analyse(res.image, draw=True, **_agent.PARAMS)
+        a = analyse(res.image, draw=True, exclude=res.exclude, **_agent.PARAMS)
         _, jpg = cv2.imencode(".jpg", a.overlay, [cv2.IMWRITE_JPEG_QUALITY, 80])
         out["overlay"] = base64.b64encode(jpg).decode()
         print(json.dumps({k: out[k] for k in ("id", "outcome", "count", "reason", "ms")}))

@@ -536,7 +536,6 @@
    "count": null,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": null,
@@ -571,10 +570,9 @@
    "kind": "glare",
    "gt": 69,
    "outcome": "ESTIMATE",
-   "count": 0,
+   "count": 1,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 0,
@@ -610,7 +608,6 @@
    "count": null,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": null,
@@ -645,10 +642,9 @@
    "kind": "glare",
    "gt": 74,
    "outcome": "ESTIMATE",
-   "count": 0,
+   "count": 10,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 0,
@@ -686,7 +682,6 @@
    "count": 0,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 0,
@@ -721,10 +716,9 @@
    "kind": "glare",
    "gt": 22,
    "outcome": "ESTIMATE",
-   "count": 17,
+   "count": 10,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 14,
@@ -759,10 +753,9 @@
    "kind": "glare",
    "gt": 6,
    "outcome": "ESTIMATE",
-   "count": 0,
+   "count": 7,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 0,
@@ -797,10 +790,9 @@
    "kind": "glare",
    "gt": 35,
    "outcome": "ESTIMATE",
-   "count": 7,
+   "count": 19,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 7,
@@ -835,10 +827,9 @@
    "kind": "glare",
    "gt": 10,
    "outcome": "ESTIMATE",
-   "count": 0,
+   "count": 14,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 0,
@@ -873,10 +864,9 @@
    "kind": "glare",
    "gt": 24,
    "outcome": "ESTIMATE",
-   "count": 9,
+   "count": 7,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 13,
@@ -911,10 +901,9 @@
    "kind": "glare",
    "gt": 41,
    "outcome": "ESTIMATE",
-   "count": 1,
+   "count": 16,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 1,
@@ -949,10 +938,9 @@
    "kind": "glare",
    "gt": 31,
    "outcome": "ESTIMATE",
-   "count": 1,
+   "count": 16,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 1,
@@ -987,10 +975,9 @@
    "kind": "glare",
    "gt": 58,
    "outcome": "ESTIMATE",
-   "count": 1,
+   "count": 11,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 1,
@@ -1025,10 +1012,9 @@
    "kind": "glare",
    "gt": 41,
    "outcome": "ESTIMATE",
-   "count": 0,
+   "count": 9,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 1,
@@ -1063,10 +1049,9 @@
    "kind": "glare",
    "gt": 24,
    "outcome": "ESTIMATE",
-   "count": 1,
+   "count": 6,
    "noticed": true,
    "tools": [
-    "suppress_glare",
     "suppress_glare"
    ],
    "without": 1,
@@ -1104,7 +1089,7 @@
    "kind": "glare",
    "gt": 32,
    "outcome": "ESTIMATE",
-   "count": 3,
+   "count": 1,
    "noticed": true,
    "tools": [
     "suppress_glare",
@@ -1145,7 +1130,7 @@
    "kind": "glare",
    "gt": 34,
    "outcome": "ESTIMATE",
-   "count": 6,
+   "count": 23,
    "noticed": true,
    "tools": [
     "suppress_glare",
@@ -1183,7 +1168,7 @@
    "kind": "glare",
    "gt": 15,
    "outcome": "ESTIMATE",
-   "count": 3,
+   "count": 4,
    "noticed": true,
    "tools": [
     "suppress_glare",
@@ -1264,8 +1249,8 @@
    "id": "14684",
    "kind": "glare",
    "gt": 55,
-   "outcome": "RETAKE",
-   "count": null,
+   "outcome": "ESTIMATE",
+   "count": 23,
    "noticed": true,
    "tools": [
     "suppress_glare",

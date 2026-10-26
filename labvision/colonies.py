@@ -38,6 +38,7 @@ class Analysis:
     overlay: np.ndarray = None
     dish_found: bool = True
     gray_var: float = 1.0   # variance of grey inside the dish (to normalise sharpness by contrast)
+    hidden: float = 0.0     # fraction of the dish excluded because it was repaired (glare)
 
     @property
     def count(self):
@@ -77,7 +78,7 @@ def _find_dish(gray):
 
 
 def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
-            tmul=1.0, tmin=18, peak=0.45, bgdiv=6.0):
+            tmul=1.0, tmin=18, peak=0.45, bgdiv=6.0, exclude=None):
     h0, w0 = bgr.shape[:2]
     scale = TARGET / max(h0, w0)
     img = cv2.resize(bgr, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
@@ -86,7 +87,14 @@ def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
 
     mask = np.zeros(gray.shape, np.uint8)
     cv2.circle(mask, (int(cx), int(cy)), int(r * margin), 255, -1)
-    area_dish = float(cv2.countNonZero(mask))
+    area_full = float(cv2.countNonZero(mask))
+    hidden = 0.0
+    if exclude is not None:   # pixels the caller has repaired/hidden: never count inside them
+        ex = cv2.resize(exclude.astype(np.uint8), (mask.shape[1], mask.shape[0]), interpolation=cv2.INTER_NEAREST)
+        ex = cv2.dilate(ex, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
+        mask[ex > 0] = 0
+        hidden = 1.0 - cv2.countNonZero(mask) / max(area_full, 1.0)
+    area_dish = max(float(cv2.countNonZero(mask)), 1.0)
 
     # flatten illumination: heavy blur of the masked image is the background
     g = gray.astype(np.float32)
@@ -128,10 +136,13 @@ def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
                    sharpness=float(cv2.Laplacian(gray, cv2.CV_64F)[mask > 0].var()),
                    glare=float((inner > 245).mean()),
                    brightness=float(inner.mean()), dish_found=dish_found,
-                   gray_var=float(inner.astype(np.float32).var()))
+                   gray_var=float(inner.astype(np.float32).var()), hidden=hidden)
     if draw:
         ov = img.copy()
         cv2.circle(ov, (int(cx), int(cy)), int(r * margin), (255, 200, 0), 2)
+        if exclude is not None:   # tint the hidden region so a human sees what was not counted
+            tint = cv2.resize(exclude.astype(np.uint8), (ov.shape[1], ov.shape[0]), interpolation=cv2.INTER_NEAREST) > 0
+            ov[tint] = (0.5 * ov[tint] + 0.5 * np.array((255, 0, 255))).astype(np.uint8)
         for c in colonies:
             cv2.circle(ov, (int(c.x), int(c.y)), max(3, int((c.area / np.pi) ** 0.5) + 2), (0, 0, 255), 1)
         out.overlay = ov

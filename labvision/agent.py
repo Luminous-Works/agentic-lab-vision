@@ -36,11 +36,12 @@ THRESH = dict(
     crowded_cov=0.25,    # fraction of dish area covered by blobs above this
     crowded_n=250,       # or more blobs than this: count unreliable, ask a human
     max_repairs=2,
+    hidden_max=0.15,     # more than this fraction of the dish hidden by repaired glare -> human review
 )
 
 
 # ---------------------------------------------------------------- tools
-def tool_enhance(img):
+def tool_enhance(img):  # returns (image, info, None): enhancement hides nothing
     """Lift an under-exposed photo: gamma then CLAHE on lightness."""
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
     l = lab[..., 0].astype(np.float32) / 255.0
@@ -49,7 +50,7 @@ def tool_enhance(img):
     l = np.power(l, gamma)
     lab[..., 0] = np.clip(l * 255, 0, 255).astype(np.uint8)
     lab[..., 0] = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8)).apply(lab[..., 0])
-    return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR), {"gamma": round(gamma, 2)}
+    return cv2.cvtColor(lab, cv2.COLOR_LAB2BGR), {"gamma": round(gamma, 2)}, None
 
 
 def tool_suppress_glare(img):
@@ -57,16 +58,16 @@ def tool_suppress_glare(img):
     g = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     m = (g > 250).astype(np.uint8) * 255
     m = cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
-    return cv2.inpaint(img, m, 5, cv2.INPAINT_TELEA), {"masked_px": int((m > 0).sum())}
+    return cv2.inpaint(img, m, 5, cv2.INPAINT_TELEA), {"masked_px": int((m > 0).sum())}, m > 0
 
 
 TOOLS = {"enhance": tool_enhance, "suppress_glare": tool_suppress_glare}
 
 
 # ---------------------------------------------------------------- perception
-def perceive(img):
-    a = analyse(img, draw=False, **PARAMS)
-    return a, dict(dish_found=a.dish_found, sharpness=round(a.sharpness / max(a.gray_var, 1e-6), 4),
+def perceive(img, exclude=None):
+    a = analyse(img, draw=False, exclude=exclude, **PARAMS)
+    return a, dict(dish_found=a.dish_found, hidden=round(a.hidden, 3), sharpness=round(a.sharpness / max(a.gray_var, 1e-6), 4),
                    brightness=round(a.brightness, 1), glare=round(a.glare, 4),
                    coverage=round(a.coverage, 3), count=a.count)
 
@@ -79,6 +80,7 @@ class Result:
     trace: list = field(default_factory=list)
     alert: bool = False
     image: object = None   # the (possibly repaired) photo the verdict is about
+    exclude: object = None # mask of repaired pixels that were not counted
 
     def to_dict(self):
         return dict(outcome=self.outcome, count=self.count, reason=self.reason,
@@ -91,14 +93,16 @@ def review(img, notify=None, repairs=True):
     T = THRESH
     trace = []
     cur = img
+    excl = None      # pixels repaired by suppress_glare: never counted
     for step in range(T["max_repairs"] + 1):
-        a, obs = perceive(cur)
+        a, obs = perceive(cur, excl)
         entry = {"step": step, "observation": obs}
         # --- decision on the visual evidence
         # glare first: highlights can fool the dish finder, so repair them before judging anything else
         if repairs and obs["glare"] > T["glare_max"] and step < T["max_repairs"]:
-            cur, info = TOOLS["suppress_glare"](cur)
-            entry.update(decision="glare high -> call suppress_glare, perceive again", tool="suppress_glare", tool_result=info)
+            cur, info, m = TOOLS["suppress_glare"](cur)
+            excl = m if excl is None else (excl | m)
+            entry.update(decision="glare high -> call suppress_glare (hidden pixels are excluded from the count), perceive again", tool="suppress_glare", tool_result=info)
             trace.append(entry); continue
         if not obs["dish_found"]:
             entry["decision"] = "dish not located -> stop, ask human to retake"
@@ -106,7 +110,7 @@ def review(img, notify=None, repairs=True):
             r = Result("RETAKE", None, "dish not found in the photo", trace, alert=True)
             break
         if repairs and obs["brightness"] < T["bright_min"] and step < T["max_repairs"]:
-            cur, info = TOOLS["enhance"](cur)
+            cur, info, _ = TOOLS["enhance"](cur)
             entry.update(decision="under-exposed -> call enhance, perceive again", tool="enhance", tool_result=info)
             trace.append(entry); continue
         if obs["sharpness"] < T["sharp_min"]:
@@ -119,13 +123,20 @@ def review(img, notify=None, repairs=True):
             trace.append(entry)
             r = Result("NEEDS_HUMAN", obs["count"], "crowded plate: count likely unreliable", trace, alert=True)
             break
+        if obs["hidden"] > T["hidden_max"]:
+            entry["decision"] = "too much of the dish was hidden by glare -> report a lower bound, ask human to review"
+            trace.append(entry)
+            r = Result("NEEDS_HUMAN", obs["count"], f"{obs['hidden']:.0%} of the dish was hidden by glare: the count is a lower bound", trace, alert=True)
+            break
         entry["decision"] = "quality adequate -> report count as an ESTIMATE for human approval"
         trace.append(entry)
-        r = Result("ESTIMATE", obs["count"], "photo quality passed; the count is an estimate that needs human approval", trace)
+        note = f" ({obs['hidden']:.0%} of the dish hidden by glare was not counted)" if obs["hidden"] > 0 else ""
+        r = Result("ESTIMATE", obs["count"], "photo quality passed; the count is an estimate that needs human approval" + note, trace)
         break
     else:  # repairs exhausted without a verdict
         r = Result("NEEDS_HUMAN", None, "could not repair photo within the step budget", trace, alert=True)
     if r.alert and notify:
         notify(f"[Agentic Lab Vision] {r.outcome}: {r.reason}")
     r.image = cur
+    r.exclude = excl
     return r
