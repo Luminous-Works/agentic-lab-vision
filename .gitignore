@@ -4,3 +4,5 @@ __pycache__/
 out/
 data/
 build/*.zip
+docs/VIDEO_SCRIPT.md
+docs/DEVPOST_TEXT.md
