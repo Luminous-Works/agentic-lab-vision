@@ -29,7 +29,8 @@ _P = os.path.join(os.path.dirname(__file__), "params.json")
 PARAMS = json.load(open(_P)) if os.path.exists(_P) else {}
 
 THRESH = dict(
-    sharp_min=25.0,      # variance of Laplacian (1000 px working size) below this = too blurry
+    sharp_min=0.04,      # Laplacian variance / grey variance (contrast-normalised) below this = too blurry.
+                         # AGAR demo: clean plates >= 0.075, blurred stress plates <= 0.017
     bright_min=100.0,     # mean grey inside the dish below this = under-exposed
     glare_max=0.005,     # fraction of dish pixels near saturation above this = glare
     crowded_cov=0.25,    # fraction of dish area covered by blobs above this
@@ -65,7 +66,7 @@ TOOLS = {"enhance": tool_enhance, "suppress_glare": tool_suppress_glare}
 # ---------------------------------------------------------------- perception
 def perceive(img):
     a = analyse(img, draw=False, **PARAMS)
-    return a, dict(dish_found=a.dish_found, sharpness=round(a.sharpness, 1),
+    return a, dict(dish_found=a.dish_found, sharpness=round(a.sharpness / max(a.gray_var, 1e-6), 4),
                    brightness=round(a.brightness, 1), glare=round(a.glare, 4),
                    coverage=round(a.coverage, 3), count=a.count)
 
@@ -94,24 +95,25 @@ def review(img, notify=None, repairs=True):
         a, obs = perceive(cur)
         entry = {"step": step, "observation": obs}
         # --- decision on the visual evidence
+        # glare first: highlights can fool the dish finder, so repair them before judging anything else
+        if repairs and obs["glare"] > T["glare_max"] and step < T["max_repairs"]:
+            cur, info = TOOLS["suppress_glare"](cur)
+            entry.update(decision="glare high -> call suppress_glare, perceive again", tool="suppress_glare", tool_result=info)
+            trace.append(entry); continue
         if not obs["dish_found"]:
             entry["decision"] = "dish not located -> stop, ask human to retake"
             trace.append(entry)
             r = Result("RETAKE", None, "dish not found in the photo", trace, alert=True)
             break
+        if repairs and obs["brightness"] < T["bright_min"] and step < T["max_repairs"]:
+            cur, info = TOOLS["enhance"](cur)
+            entry.update(decision="under-exposed -> call enhance, perceive again", tool="enhance", tool_result=info)
+            trace.append(entry); continue
         if obs["sharpness"] < T["sharp_min"]:
             entry["decision"] = "photo too blurry to count -> stop, ask human to retake"
             trace.append(entry)
             r = Result("RETAKE", None, "photo out of focus", trace, alert=True)
             break
-        if repairs and obs["glare"] > T["glare_max"] and step < T["max_repairs"]:
-            cur, info = TOOLS["suppress_glare"](cur)
-            entry.update(decision="glare high -> call suppress_glare, perceive again", tool="suppress_glare", tool_result=info)
-            trace.append(entry); continue
-        if repairs and obs["brightness"] < T["bright_min"] and step < T["max_repairs"]:
-            cur, info = TOOLS["enhance"](cur)
-            entry.update(decision="under-exposed -> call enhance, perceive again", tool="enhance", tool_result=info)
-            trace.append(entry); continue
         if obs["coverage"] > T["crowded_cov"] or obs["count"] > T["crowded_n"]:
             entry["decision"] = "too crowded for a trustworthy count -> report it, ask human to approve"
             trace.append(entry)

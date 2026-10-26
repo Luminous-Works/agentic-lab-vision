@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 600" font-family="Segoe UI, system-ui, sans-serif">
+  <rect width="960" height="600" fill="#0f1115"/>
+  <text x="30" y="40" font-size="24" font-weight="700" fill="#f4f6fa">Agent workflow: perceive, decide, act</text>
+  <text x="30" y="64" font-size="14" fill="#aab2c0">What OpenCV 5 sees decides the next tool call. Glare is repaired first.</text>
+  <defs><marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#aab2c0"/></marker></defs>
+
+  <rect x="30" y="100" width="170" height="70" rx="10" fill="#1a1e26" stroke="#5aa9ff" stroke-width="2"/>
+  <text x="115" y="130" text-anchor="middle" font-size="15" font-weight="700" fill="#f4f6fa">PERCEIVE</text>
+  <text x="115" y="152" text-anchor="middle" font-size="12" fill="#aab2c0">dish, focus, light, glare, blobs</text>
+  <line x1="200" y1="135" x2="258" y2="135" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+
+  <rect x="260" y="100" width="170" height="70" rx="10" fill="#3d3210" stroke="#ffc83d" stroke-width="2"/>
+  <text x="345" y="130" text-anchor="middle" font-size="15" font-weight="700" fill="#ffc83d">DECIDE</text>
+  <text x="345" y="152" text-anchor="middle" font-size="12" fill="#f3e3b0">rules over the measurements</text>
+
+  <!-- branches -->
+  <line x1="430" y1="125" x2="500" y2="110" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="430" y1="135" x2="500" y2="195" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="430" y1="145" x2="500" y2="280" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="430" y1="155" x2="500" y2="365" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="430" y1="165" x2="500" y2="450" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+
+  <rect x="502" y="170" width="300" height="50" rx="8" fill="#401a1a"/>
+  <text x="515" y="191" font-size="13" font-weight="700" fill="#ff6b6b">dish not found</text>
+  <text x="515" y="209" font-size="12" fill="#f0c4c4">ACT: stop, ask for a retake, alert (SNS)</text>
+
+  <rect x="502" y="85" width="300" height="50" rx="8" fill="#1a1e26" stroke="#38d996"/>
+  <text x="515" y="106" font-size="13" font-weight="700" fill="#38d996">glare above threshold</text>
+  <text x="515" y="124" font-size="12" fill="#aab2c0">ACT: tool suppress_glare (inpaint), perceive again</text>
+
+  <rect x="502" y="255" width="300" height="50" rx="8" fill="#1a1e26" stroke="#38d996"/>
+  <text x="515" y="276" font-size="13" font-weight="700" fill="#38d996">too dark</text>
+  <text x="515" y="294" font-size="12" fill="#aab2c0">ACT: tool enhance (gamma + CLAHE), perceive again</text>
+
+  <rect x="502" y="340" width="300" height="50" rx="8" fill="#401a1a"/>
+  <text x="515" y="361" font-size="13" font-weight="700" fill="#ff6b6b">out of focus (after repairs)</text>
+  <text x="515" y="379" font-size="12" fill="#f0c4c4">ACT: stop, ask for a retake, alert (SNS)</text>
+
+  <rect x="502" y="425" width="300" height="50" rx="8" fill="#3d3210"/>
+  <text x="515" y="446" font-size="13" font-weight="700" fill="#ffc83d">crowded plate</text>
+  <text x="515" y="464" font-size="12" fill="#f3e3b0">ACT: count shown, human must review, alert (SNS)</text>
+
+  <rect x="502" y="510" width="300" height="50" rx="8" fill="#0f3a2b"/>
+  <text x="515" y="531" font-size="13" font-weight="700" fill="#38d996">quality adequate</text>
+  <text x="515" y="549" font-size="12" fill="#cfeee0">ACT: report ESTIMATE; a person approves it</text>
+  <line x1="430" y1="170" x2="500" y2="535" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+
+  <!-- loop back -->
+  <path d="M 802 110 L 890 110 L 890 78 L 115 78 L 115 98" fill="none" stroke="#38d996" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a)"/>
+  <path d="M 802 280 L 890 280 L 890 110" fill="none" stroke="#38d996" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="640" y="72" font-size="12" fill="#38d996">repair, then back to PERCEIVE (max 2 rounds)</text>
+
+  <text x="30" y="260" font-size="13" fill="#aab2c0">Human control: no count is auto-recorded.</text>
+  <text x="30" y="280" font-size="13" fill="#aab2c0">The page offers Approve / Retake and the</text>
+  <text x="30" y="300" font-size="13" fill="#aab2c0">choice is logged (POST /decision).</text>
+  <text x="30" y="340" font-size="13" fill="#aab2c0">Every step is returned as a trace with</text>
+  <text x="30" y="360" font-size="13" fill="#aab2c0">the measurements behind the decision.</text>
+</svg>

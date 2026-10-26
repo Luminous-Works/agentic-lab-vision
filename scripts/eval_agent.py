@@ -36,11 +36,14 @@ for j, gt, sub in items:
 def blur(im): return cv2.GaussianBlur(im, (0, 0), 0.012 * max(im.shape[:2]))
 def dim(im): return np.clip(im.astype(np.float32) * 0.40, 0, 255).astype(np.uint8)
 def glare(im):
-    o = im.copy(); h, w = o.shape[:2]; rng = np.random.default_rng(7)
+    """Five soft white highlights; only the highlight mask is feathered, the plate stays sharp."""
+    h, w = im.shape[:2]; rng = np.random.default_rng(7)
+    m = np.zeros((h, w), np.float32)
     for _ in range(5):
         c = (int(w * (0.3 + 0.4 * rng.random())), int(h * (0.3 + 0.4 * rng.random())))
-        cv2.ellipse(o, c, (int(w * 0.07), int(h * 0.05)), rng.integers(0, 180), 0, 360, (255, 255, 255), -1)
-    return cv2.GaussianBlur(o, (0, 0), 3)
+        cv2.ellipse(m, c, (int(w * 0.07), int(h * 0.05)), int(rng.integers(0, 180)), 0, 360, 1.0, -1)
+    m = cv2.GaussianBlur(m, (0, 0), max(2.0, 0.003 * max(h, w)))[..., None]
+    return np.clip(im.astype(np.float32) * (1 - m) + 255.0 * m, 0, 255).astype(np.uint8)
 
 for j, gt, sub in items[1::2]:           # held-out half, to keep run time bounded
     if not gt: continue

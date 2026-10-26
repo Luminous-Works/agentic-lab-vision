@@ -37,6 +37,7 @@ class Analysis:
     brightness: float = 0.0
     overlay: np.ndarray = None
     dish_found: bool = True
+    gray_var: float = 1.0   # variance of grey inside the dish (to normalise sharpness by contrast)
 
     @property
     def count(self):
@@ -126,7 +127,8 @@ def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
                    coverage=sum(c.area for c in colonies) / area_dish,
                    sharpness=float(cv2.Laplacian(gray, cv2.CV_64F)[mask > 0].var()),
                    glare=float((inner > 245).mean()),
-                   brightness=float(inner.mean()), dish_found=dish_found)
+                   brightness=float(inner.mean()), dish_found=dish_found,
+                   gray_var=float(inner.astype(np.float32).var()))
     if draw:
         ov = img.copy()
         cv2.circle(ov, (int(cx), int(cy)), int(r * margin), (255, 200, 0), 2)
@@ -180,7 +182,8 @@ def analyse_blobs(bgr, margin=0.90, k=5.0, sigmas=(1.5, 2.5, 4.0, 6.0), draw=Tru
     out = Analysis(scale=scale, dish=(cx, cy, r), colonies=colonies,
                    coverage=sum(c.area for c in colonies) / area_dish,
                    sharpness=float(cv2.Laplacian(gray, cv2.CV_32F)[mask > 0].var()),
-                   glare=float((gi > 245).mean()), brightness=float(gi.mean()), dish_found=dish_found)
+                   glare=float((gi > 245).mean()), brightness=float(gi.mean()), dish_found=dish_found,
+                   gray_var=float(gi.astype(np.float32).var()))
     if draw:
         ov = img.copy()
         cv2.circle(ov, (int(cx), int(cy)), int(r * margin), (255, 200, 0), 2)

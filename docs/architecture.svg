@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 520" font-family="Segoe UI, system-ui, sans-serif">
+  <rect width="960" height="520" fill="#0f1115"/>
+  <text x="30" y="40" font-size="24" font-weight="700" fill="#f4f6fa">Agentic Lab Vision: architecture</text>
+  <text x="30" y="64" font-size="14" fill="#aab2c0">OpenCV 5.0.0 on AWS Lambda (Python 3.13, x86_64). No servers, no database, no S3.</text>
+
+  <!-- browser -->
+  <rect x="30" y="110" width="170" height="120" rx="12" fill="#1a1e26" stroke="#5aa9ff" stroke-width="2"/>
+  <text x="115" y="140" text-anchor="middle" font-size="16" font-weight="700" fill="#f4f6fa">Lab user</text>
+  <text x="115" y="164" text-anchor="middle" font-size="13" fill="#aab2c0">Browser page (page.py)</text>
+  <text x="115" y="184" text-anchor="middle" font-size="13" fill="#aab2c0">photo resized to 1600 px</text>
+  <text x="115" y="204" text-anchor="middle" font-size="13" fill="#aab2c0">Approve / Retake buttons</text>
+
+  <!-- function url -->
+  <rect x="270" y="110" width="170" height="120" rx="12" fill="#1a1e26" stroke="#ffc83d" stroke-width="2"/>
+  <text x="355" y="140" text-anchor="middle" font-size="16" font-weight="700" fill="#f4f6fa">Lambda Function URL</text>
+  <text x="355" y="164" text-anchor="middle" font-size="13" fill="#aab2c0">HTTPS, x-api-key checked</text>
+  <text x="355" y="184" text-anchor="middle" font-size="13" fill="#aab2c0">GET /   POST /analyze</text>
+  <text x="355" y="204" text-anchor="middle" font-size="13" fill="#aab2c0">POST /decision</text>
+
+  <!-- lambda -->
+  <rect x="510" y="90" width="420" height="260" rx="14" fill="#1a1e26" stroke="#38d996" stroke-width="2"/>
+  <text x="720" y="120" text-anchor="middle" font-size="17" font-weight="700" fill="#f4f6fa">Lambda function lv-agent (512 MB)</text>
+  <rect x="530" y="136" width="180" height="92" rx="10" fill="#0f3a2b"/>
+  <text x="620" y="160" text-anchor="middle" font-size="14" font-weight="700" fill="#38d996">OpenCV 5 perception</text>
+  <text x="620" y="182" text-anchor="middle" font-size="12" fill="#cfeee0">dish, focus, light, glare</text>
+  <text x="620" y="200" text-anchor="middle" font-size="12" fill="#cfeee0">colony count</text>
+  <text x="620" y="218" text-anchor="middle" font-size="12" fill="#cfeee0">repair tools</text>
+  <rect x="730" y="136" width="180" height="92" rx="10" fill="#3d3210"/>
+  <text x="820" y="160" text-anchor="middle" font-size="14" font-weight="700" fill="#ffc83d">Agent policy</text>
+  <text x="820" y="182" text-anchor="middle" font-size="12" fill="#f3e3b0">what was seen decides</text>
+  <text x="820" y="200" text-anchor="middle" font-size="12" fill="#f3e3b0">the next tool call</text>
+  <text x="820" y="218" text-anchor="middle" font-size="12" fill="#f3e3b0">trace of every step</text>
+  <text x="720" y="262" text-anchor="middle" font-size="13" fill="#aab2c0">Layers: lv-cv2 (OpenCV 5 engine), lv-libs_numpy (support libs + numpy)</text>
+  <text x="720" y="284" text-anchor="middle" font-size="13" fill="#aab2c0">Role lab-vision-lambda-role (logs + SNS publish)</text>
+  <text x="720" y="306" text-anchor="middle" font-size="13" fill="#aab2c0">Environment: API_TOKEN, SNS_TOPIC_ARN</text>
+
+  <!-- aws services -->
+  <rect x="510" y="390" width="190" height="90" rx="12" fill="#1a1e26" stroke="#ff9900" stroke-width="2"/>
+  <text x="605" y="420" text-anchor="middle" font-size="15" font-weight="700" fill="#f4f6fa">Amazon SNS</text>
+  <text x="605" y="442" text-anchor="middle" font-size="12" fill="#aab2c0">topic lab-vision-alerts</text>
+  <text x="605" y="460" text-anchor="middle" font-size="12" fill="#aab2c0">RETAKE / NEEDS_HUMAN alerts</text>
+  <rect x="740" y="390" width="190" height="90" rx="12" fill="#1a1e26" stroke="#ff9900" stroke-width="2"/>
+  <text x="835" y="420" text-anchor="middle" font-size="15" font-weight="700" fill="#f4f6fa">CloudWatch Logs</text>
+  <text x="835" y="442" text-anchor="middle" font-size="12" fill="#aab2c0">one JSON line per verdict</text>
+  <text x="835" y="460" text-anchor="middle" font-size="12" fill="#aab2c0">and per human decision</text>
+
+  <!-- arrows -->
+  <defs><marker id="a" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#aab2c0"/></marker></defs>
+  <line x1="200" y1="170" x2="268" y2="170" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="440" y1="170" x2="508" y2="170" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="620" y1="350" x2="605" y2="388" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+  <line x1="820" y1="350" x2="835" y2="388" stroke="#aab2c0" stroke-width="2" marker-end="url(#a)"/>
+  <text x="30" y="330" font-size="14" fill="#aab2c0">Request: photo (base64 JPEG) + key.</text>
+  <text x="30" y="352" font-size="14" fill="#aab2c0">Response: verdict, count, trace,</text>
+  <text x="30" y="374" font-size="14" fill="#aab2c0">overlay image with colonies circled.</text>
+  <text x="30" y="414" font-size="14" fill="#aab2c0">Deploy: deploy/build_layers.py, deploy/deploy.py</text>
+</svg>

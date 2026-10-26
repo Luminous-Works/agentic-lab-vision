@@ -1,0 +1,130 @@
+{
+ "1_clean": {
+  "outcome": "ESTIMATE",
+  "count": 120,
+  "reason": "photo quality passed; the count is an estimate that needs human approval",
+  "alert": false,
+  "trace": [
+   {
+    "step": 0,
+    "observation": {
+     "dish_found": true,
+     "sharpness": 1.5596,
+     "brightness": 187.5,
+     "glare": 0.0,
+     "coverage": 0.012,
+     "count": 120
+    },
+    "decision": "quality adequate -> report count as an ESTIMATE for human approval"
+   }
+  ],
+  "id": "031223a7-5908-440b-9dca-ce86b62ae467",
+  "ms": 3197,
+  "opencv": "5.0.0",
+  "wall_s": 7.5
+ },
+ "2_dim": {
+  "outcome": "ESTIMATE",
+  "count": 111,
+  "reason": "photo quality passed; the count is an estimate that needs human approval",
+  "alert": false,
+  "trace": [
+   {
+    "step": 0,
+    "observation": {
+     "dish_found": true,
+     "sharpness": 1.5572,
+     "brightness": 74.7,
+     "glare": 0.0,
+     "coverage": 0.012,
+     "count": 119
+    },
+    "decision": "under-exposed -> call enhance, perceive again",
+    "tool": "enhance",
+    "tool_result": {
+     "gamma": 0.62
+    }
+   },
+   {
+    "step": 1,
+    "observation": {
+     "dish_found": true,
+     "sharpness": 1.3875,
+     "brightness": 128.6,
+     "glare": 0.0,
+     "coverage": 0.013,
+     "count": 111
+    },
+    "decision": "quality adequate -> report count as an ESTIMATE for human approval"
+   }
+  ],
+  "id": "c50675c9-25a5-4cc9-affc-134beaddb5a3",
+  "ms": 6463,
+  "opencv": "5.0.0",
+  "wall_s": 10.2
+ },
+ "3_glare": {
+  "outcome": "ESTIMATE",
+  "count": 3,
+  "reason": "photo quality passed; the count is an estimate that needs human approval",
+  "alert": false,
+  "trace": [
+   {
+    "step": 0,
+    "observation": {
+     "dish_found": false,
+     "sharpness": 0.563,
+     "brightness": 194.7,
+     "glare": 0.0878,
+     "coverage": 0.0,
+     "count": 0
+    },
+    "decision": "glare high -> call suppress_glare, perceive again",
+    "tool": "suppress_glare",
+    "tool_result": {
+     "masked_px": 105720
+    }
+   },
+   {
+    "step": 1,
+    "observation": {
+     "dish_found": true,
+     "sharpness": 0.9861,
+     "brightness": 191.7,
+     "glare": 0.0,
+     "coverage": 0.056,
+     "count": 3
+    },
+    "decision": "quality adequate -> report count as an ESTIMATE for human approval"
+   }
+  ],
+  "id": "111fdbe4-e526-47dc-95f3-3bb7b67e656f",
+  "ms": 3698,
+  "opencv": "5.0.0",
+  "wall_s": 5.8
+ },
+ "4_blurry": {
+  "outcome": "RETAKE",
+  "count": null,
+  "reason": "photo out of focus",
+  "alert": true,
+  "trace": [
+   {
+    "step": 0,
+    "observation": {
+     "dish_found": true,
+     "sharpness": 0.0178,
+     "brightness": 187.3,
+     "glare": 0.0,
+     "coverage": 0.073,
+     "count": 14
+    },
+    "decision": "photo too blurry to count -> stop, ask human to retake"
+   }
+  ],
+  "id": "45ef4de1-5c3b-40a7-ad34-abe2ea74bf45",
+  "ms": 1463,
+  "opencv": "5.0.0",
+  "wall_s": 3.5
+ }
+}

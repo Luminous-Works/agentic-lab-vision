@@ -1,0 +1,82 @@
+clean bright 1399.json NEEDS_HUMAN 481 0
+clean bright 349.json ESTIMATE 119 99
+clean bright 356.json ESTIMATE 36 4
+clean bright 510.json ESTIMATE 23 69
+clean bright 518.json ESTIMATE 240 298
+clean bright 525.json RETAKE None 83
+clean bright 734.json ESTIMATE 30 54
+clean bright 735.json ESTIMATE 29 74
+clean bright 736.json ESTIMATE 33 28
+clean bright 971.json ESTIMATE 16 130
+clean dark 4826.json ESTIMATE 3 11
+clean dark 4904.json ESTIMATE 8 22
+clean dark 5206.json ESTIMATE 5 101
+clean dark 5207.json ESTIMATE 6 6
+clean dark 5212.json ESTIMATE 7 42
+clean dark 5270.json ESTIMATE 14 35
+clean dark 5271.json ESTIMATE 23 43
+clean dark 5308.json ESTIMATE 11 10
+clean dark 5312.json ESTIMATE 9 25
+clean dark 8386.json ESTIMATE 4 24
+clean vague 11761.json ESTIMATE 0 54
+clean vague 11764.json ESTIMATE 4 41
+clean vague 11773.json ESTIMATE 7 5
+clean vague 11884.json ESTIMATE 6 31
+clean vague 11890.json ESTIMATE 13 3
+clean vague 11924.json ESTIMATE 13 58
+clean vague 11955.json ESTIMATE 3 4
+clean vague 12028.json ESTIMATE 7 41
+clean vague 12031.json ESTIMATE 7 56
+clean vague 12033.json ESTIMATE 4 24
+clean lower 13895.json ESTIMATE 17 19
+clean lower 13938.json ESTIMATE 65 32
+clean lower 14130.json ESTIMATE 7 18
+clean lower 14380.json ESTIMATE 20 34
+clean lower 14410.json ESTIMATE 32 37
+clean lower 14512.json ESTIMATE 7 15
+clean lower 14581.json ESTIMATE 20 125
+clean lower 14618.json ESTIMATE 80 40
+clean lower 14627.json ESTIMATE 6 12
+clean lower 14684.json ESTIMATE 42 55
+stress 349.json
+stress 510.json
+stress 525.json
+stress 735.json
+stress 971.json
+stress 4904.json
+stress 5207.json
+stress 5270.json
+stress 5308.json
+stress 8386.json
+stress 11764.json
+stress 11884.json
+stress 11924.json
+stress 12028.json
+stress 12033.json
+stress 13938.json
+stress 14380.json
+stress 14512.json
+stress 14618.json
+stress 14684.json
+
+=== A. CLEAN ===
+outcomes: {'NEEDS_HUMAN': 1, 'ESTIMATE': 38, 'RETAKE': 1}
+all counted plates n=38 median rel err 0.64
+ESTIMATE-outcome n=38 median rel err 0.64 within20% 6/38
+
+=== B. REPAIR VALUE (lower-res, dim set) ===
+{'id': '13895', 'gt': 19, 'with_repair': 17, 'without': 21, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '13938', 'gt': 32, 'with_repair': 65, 'without': 26, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '14130', 'gt': 18, 'with_repair': 7, 'without': 7, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '14380', 'gt': 34, 'with_repair': 20, 'without': 25, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '14410', 'gt': 37, 'with_repair': 32, 'without': 27, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '14512', 'gt': 15, 'with_repair': 7, 'without': 3, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '14581', 'gt': 125, 'with_repair': 20, 'without': 23, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '14618', 'gt': 40, 'with_repair': 80, 'without': 38, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '14627', 'gt': 12, 'with_repair': 6, 'without': 9, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+{'id': '14684', 'gt': 55, 'with_repair': 42, 'without': 42, 'out_with': 'ESTIMATE', 'out_without': 'ESTIMATE'}
+
+=== C. STRESS ===
+blur noticed+right action 20/20
+dim noticed+right action 18/20
+glare noticed+right action 20/20
