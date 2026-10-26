@@ -36,6 +36,7 @@ class Analysis:
     glare: float = 0.0     # fraction of dish pixels near saturation
     brightness: float = 0.0
     overlay: np.ndarray = None
+    dish_found: bool = True
 
     @property
     def count(self):
@@ -43,16 +44,35 @@ class Analysis:
 
 
 def _find_dish(gray):
+    """Locate the dish. Returns (cx, cy, r, found). Tries Hough at several
+    sensitivities, then the largest near-circular region in either polarity.
+    If nothing convincing turns up it returns the image centre with found=False,
+    so callers can refuse to trust the result instead of guessing silently."""
     h, w = gray.shape
-    small = cv2.GaussianBlur(gray, (0, 0), 3)
     m = min(h, w)
-    circles = cv2.HoughCircles(small, cv2.HOUGH_GRADIENT, dp=1.5, minDist=m,
-                               param1=100, param2=40,
-                               minRadius=int(m * 0.30), maxRadius=int(m * 0.55))
-    if circles is not None:
-        cx, cy, r = circles[0][0]
-        return float(cx), float(cy), float(r)
-    return w / 2.0, h / 2.0, m * 0.45
+    small = cv2.GaussianBlur(gray, (0, 0), 3)
+    for p2 in (40, 30, 22):
+        circles = cv2.HoughCircles(small, cv2.HOUGH_GRADIENT, dp=1.5, minDist=m,
+                                   param1=100, param2=p2,
+                                   minRadius=int(m * 0.30), maxRadius=int(m * 0.55))
+        if circles is not None:
+            cx, cy, r = circles[0][0]
+            return float(cx), float(cy), float(r), True
+    best = None
+    _, otsu = cv2.threshold(small, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    for binm in (otsu, cv2.bitwise_not(otsu)):
+        binm = cv2.morphologyEx(binm, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15)))
+        cnts, _ = cv2.findContours(binm, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for c in cnts:
+            (x, y), r = cv2.minEnclosingCircle(c)
+            if not (0.30 * m <= r <= 0.60 * m):
+                continue
+            circ = cv2.contourArea(c) / (np.pi * r * r)
+            if circ > 0.80 and (best is None or circ > best[0]):
+                best = (circ, x, y, r)
+    if best:
+        return float(best[1]), float(best[2]), float(best[3]), True
+    return w / 2.0, h / 2.0, m * 0.45, False
 
 
 def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
@@ -61,7 +81,7 @@ def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
     scale = TARGET / max(h0, w0)
     img = cv2.resize(bgr, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    cx, cy, r = _find_dish(gray)
+    cx, cy, r, dish_found = _find_dish(gray)
 
     mask = np.zeros(gray.shape, np.uint8)
     cv2.circle(mask, (int(cx), int(cy)), int(r * margin), 255, -1)
@@ -106,7 +126,7 @@ def analyse(bgr, margin=0.90, min_area=12, max_area_frac=0.02, draw=True,
                    coverage=sum(c.area for c in colonies) / area_dish,
                    sharpness=float(cv2.Laplacian(gray, cv2.CV_64F)[mask > 0].var()),
                    glare=float((inner > 250).mean()),
-                   brightness=float(inner.mean()))
+                   brightness=float(inner.mean()), dish_found=dish_found)
     if draw:
         ov = img.copy()
         cv2.circle(ov, (int(cx), int(cy)), int(r * margin), (255, 200, 0), 2)
@@ -130,7 +150,7 @@ def analyse_blobs(bgr, margin=0.90, k=5.0, sigmas=(1.5, 2.5, 4.0, 6.0), draw=Tru
     scale = TARGET / max(h0, w0)
     img = cv2.resize(bgr, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype(np.float32)
-    cx, cy, r = _find_dish(gray.astype(np.uint8))
+    cx, cy, r, dish_found = _find_dish(gray.astype(np.uint8))
     mask = np.zeros(gray.shape, np.uint8)
     cv2.circle(mask, (int(cx), int(cy)), int(r * margin), 255, -1)
     area_dish = float(cv2.countNonZero(mask))
@@ -160,7 +180,7 @@ def analyse_blobs(bgr, margin=0.90, k=5.0, sigmas=(1.5, 2.5, 4.0, 6.0), draw=Tru
     out = Analysis(scale=scale, dish=(cx, cy, r), colonies=colonies,
                    coverage=sum(c.area for c in colonies) / area_dish,
                    sharpness=float(cv2.Laplacian(gray, cv2.CV_32F)[mask > 0].var()),
-                   glare=float((gi > 250).mean()), brightness=float(gi.mean()))
+                   glare=float((gi > 250).mean()), brightness=float(gi.mean()), dish_found=dish_found)
     if draw:
         ov = img.copy()
         cv2.circle(ov, (int(cx), int(cy)), int(r * margin), (255, 200, 0), 2)

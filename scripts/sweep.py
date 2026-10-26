@@ -26,7 +26,7 @@ def score(rows, **kw):
     errs = [abs(analyse(img(j), draw=False, **kw).count - gt) / gt for j, gt in rows]
     return st.mean(errs)
 
-grid = dict(tmul=[0.4, 0.6, 0.8, 1.0], tmin=[8, 12, 18], peak=[0.35, 0.5], bgdiv=[3.0, 6.0])
+grid = dict(tmul=[0.6, 1.0], tmin=[8, 14], peak=[0.35, 0.5], bgdiv=[3.0, 6.0])
 best = None
 for vals in itertools.product(*grid.values()):
     kw = dict(zip(grid, vals))
