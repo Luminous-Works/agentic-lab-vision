@@ -10,6 +10,7 @@ h1{font-size:32px;margin:0 0 4px}p.s{color:var(--mut);margin:0 0 20px}
 input,button{font:inherit;border-radius:10px;border:2px solid #39414f;background:#0f1115;color:var(--fg);padding:12px 14px}
 button{background:var(--acc);color:#07101c;border:0;font-weight:700;cursor:pointer}
 button:disabled{opacity:.5}
+input[type=file]{width:100%;box-sizing:border-box}
 button.alt{background:#2a3140;color:var(--fg)}
 .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
 #v{font-size:26px;font-weight:800;padding:12px 16px;border-radius:12px;display:none}
