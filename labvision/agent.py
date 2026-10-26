@@ -75,6 +75,7 @@ class Result:
     reason: str
     trace: list = field(default_factory=list)
     alert: bool = False
+    image: object = None   # the (possibly repaired) photo the verdict is about
 
     def to_dict(self):
         return dict(outcome=self.outcome, count=self.count, reason=self.reason,
@@ -122,4 +123,5 @@ def review(img, notify=None, repairs=True):
         r = Result("NEEDS_HUMAN", None, "could not repair photo within the step budget", trace, alert=True)
     if r.alert and notify:
         notify(f"[Agentic Lab Vision] {r.outcome}: {r.reason}")
+    r.image = cur
     return r

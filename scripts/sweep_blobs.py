@@ -13,7 +13,7 @@ imgs = {j: cv2.imread(j[:-4] + "jpg") for j, _ in items}
 def run(rows, **kw):
     return [(gt, analyse_blobs(imgs[j], draw=False, **kw).count) for j, gt in rows]
 def rel(res): return st.mean(abs(n - g) / g for g, n in res)
-grid = dict(k=[10.0, 14.0, 20.0, 28.0, 40.0, 60.0], margin=[0.86, 0.90], sigmas=[(2.0, 3.0, 4.5, 6.5), (2.5, 4.0, 6.0)])
+grid = dict(k=[8.0, 12.0, 16.0, 24.0, 40.0], margin=[0.80, 0.86, 0.92], sigmas=[(2.0, 3.0, 4.5), (1.5, 2.5, 4.0)])
 best = None
 for vals in itertools.product(*grid.values()):
     kw = dict(zip(grid, vals)); s = rel(run(tune, **kw)); print(kw, round(s, 3), flush=True)
